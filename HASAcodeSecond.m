@@ -20,7 +20,7 @@ o = abs((Cs.Lb*Cs.ULF/Cs.Dbe)^0.15*Cs.Qmax^0.16*Cs.Sbtot^1.05);
 wBody = 0.341*Cs.mf*o^1.0;    %Body Weight
 wPropellant = wOxidizer + wFuel;  %Propellant Weight
 Wemp = WTOGW - wPropellant;     %Empty Weight
-Ww = 0.2958*Cs.mf*(abs(Wemp*Cs.ULF/1000)^0.52 * abs(Cs.Sref)^0.7 * abs(Cs.AR)^0.47 * abs((1+Cs.lambda)/(Cs.tc))^0.4 * abs(0.3+0.7/cos(Cs.lambdah)))^1.017;  %Wing Weight
+Ww = cf*0.2958*Cs.mf*(abs(Wemp*Cs.ULF/1000)^0.52 * abs(Cs.Sref)^0.7 * abs(Cs.AR)^0.47 * abs((1+Cs.lambda)/(Cs.tc))^0.4 * abs(0.3+0.7/cos(Cs.lambdah)))^1.017;  %Wing Weight
 Delta = abs((WTOGW/Cs.Sref)^0.6*(Cs.Swfh)^1.2*(Cs.Qmax)^0.8);
 Wfinh = 0.0035*(Delta)^1.0;     %Horiziontal Tail Weight
 Wfinv = 5.0*(Cs.Swfv)^1.09;        %Vertical Tail Weight
@@ -47,7 +47,7 @@ wSubsystem = wHydr + wAvioncs + wElectrical + wEquipment;
 
 MainComponents = [wPropellant; wStructure; wPropulsion; wSubsystem; WTOGW];
 Propellant = [wOxidizer; wFuel];
-Structure = [wBody; wtps; wGear; wThrust; Cs.wTank];
+Structure = [wBody; wtps; wGear; wThrust; Cs.wTank; Ww; Wfinh; Wfinv];
 Propulsion = wEng;
 Subsystem = [wHydr; wAvioncs; wElectrical; wEquipment];
 
