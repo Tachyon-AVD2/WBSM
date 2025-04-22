@@ -11,38 +11,44 @@ Constants are inputted based on the vehicle.
 Constants are set in ConstantFirst Function
 %}
 
-function [MainComponents, Propellant, Structure,  Propulsion, Subsystem] = HASAcodeFirst(cf, wOxidizer, wFuel, WTOGW, C)
-
-Stb = C.Sbtot/2;  %lower half of the body wetted surface area
+function [MainComponents, Propellant, Structure,  Propulsion, Subsystem] = HASAcodeFirst(cf, wOxidizer, wFuel, WTOGW, Cf)
+% Constants
+Stb = Cf.Sbtot;
 
 % Total Structure Weight
-o = abs( ((C.Lb * C.ULF ) / C.Dbe )^ 0.15 * C.Qmax ^ 0.16 * C.Sbtot ^ 1.05 );
-wPropellant = wOxidizer + wFuel;  % Fuel weight, Propulsion
-wBody = 0.341 * C.mf * o ^ 1.0;  %Body weight 
-wThrust = 0.0025 * C.Ttork; % Thrust structure weight 
-wtps = C.Wins * Stb; % TPS weight
-wStructure = wBody + wtps + C.wLandingLegs + wThrust + C.wTank; %Total structure weight
+o = abs((Cf.Lb*Cf.ULF/Cf.Dbe)^0.15*Cf.Qmax^0.16*Cf.Sbtot^1.05);
+wBody = 0.341*Cf.mf*o^1.0;    %Body Weight 
+wPropellant = wOxidizer + wFuel;  %Propellant Weight
+Wemp = WTOGW - wPropellant;     %Empty Weight
+Ww = cf*0.2958*Cf.mf*(abs(Wemp*Cf.ULF/1000)^0.52 * abs(Cf.Sref)^0.7 * abs(Cf.AR)^0.47 * abs((1+Cf.lambda)/(Cf.tc))^0.4 * abs(0.3+0.7/cos(Cf.lambdah)))^1.017;  %Wing Weight
+Delta = abs((WTOGW/Cf.Sref)^0.6*(Cf.Swfh)^1.2*(Cf.Qmax)^0.8);
+Wfinh = 0.0035*(Delta)^1.0;     %Horiziontal Tail Weight
+Wfinv = 5.0*(Cf.Swfv)^1.09;        %Vertical Tail Weight
+wGear = 0.00916*(Wemp)^1.124;  %Landing Gear Weight
+wThrust = 0.0025*Cf.Ttotrk;     %Thrust Structure Weight
+wtps = Cf.Wins*(Stb + Cf.Sref + Cf.Swfh);   %TPS Weight
+
+wStructure = wBody + wtps + wGear + wThrust;
 
 % Propulsion Weight
-wPropulsion = C.wEng;  %wtank +% Total propulsion weight 
+wEng = 0.00766*(Cf.Ttotrk) + 0.00033 * (Cf.Ttotrk) * (Cf.Aratio)^0.5 + 130 * Cf.Neng; %Engine Weight
+
+wPropulsion = wEng + Cf.wTank;
 
 % Subsystem Weight
-phi = abs (( C.Qmax / 1000 ) ^ 0.334 * C.Lb ^ 0.5 );
-wHydr = 2.64 * phi ^ 1.0; % Hydraulics weight
-wAvioncs = 66.37 * WTOGW ^ 0.361; % Total avionics weight 
-psi =  abs (WTOGW ^ 0.5 * C.Lb ^ 0.25);
-wElectrical = 1.167 *  psi ^ 1.0; % Electrical weight
-wEquipment = 1000 + 0.01 * (WTOGW - 0.0000003); % Equipment weight
+Psi = abs(((Cf.Sref + Cf.Swfv + Cf.Swfh)*Cf.Qmax/1000)^0.334 * (Cf.Lb + Cf.Wspan)^0.5);
+wHydr = 2.64*(Psi)^1.0; %Hydraulic Weight
+wAvioncs = 66.37*(Wemp)^0.361;    %Avionics Weight
+O = abs((Wemp)^0.5 * (Cf.Lb)^0.25);
+wElectrical = 1.167*(O)^1.0; %Electrical System Weight
+wEquipment = 10000 + 0.01*(Wemp-0.0000003);    %Equipment Weight
 
-wSubsystem = wHydr + wAvioncs + wElectrical + wEquipment; % Subsystems weight
+wSubsystem = wHydr + wAvioncs + wElectrical + wEquipment;
 
-% Total Weight
-TOGW = wPropellant + wStructure  + C.wGridfins + wPropulsion + wSubsystem;  %HASA TOGW
-
-MainComponents = [wPropellant; wStructure; wPropulsion; wSubsystem; TOGW];
+MainComponents = [wPropellant; wStructure; wPropulsion; wSubsystem; WTOGW];
 Propellant = [wOxidizer; wFuel];
-Structure = [wBody; wtps; C.wLandingLegs; wThrust; C.wTank];
-Propulsion = C.wEng;
+Structure = [wBody; wtps; wGear; wThrust; Cf.wTank];
+Propulsion = wEng;
 Subsystem = [wHydr; wAvioncs; wElectrical; wEquipment];
 
 end
